@@ -1,0 +1,264 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Britton Couchman <brittondcouchman@gmail.com>
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+#content.app-integration_deckcraft {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+#deckcraft-editor {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+	width: 100%;
+	height: 100%;
+	background: var(--color-main-background);
+}
+
+.deckcraft-bar {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--default-grid-baseline, 4px) * 2);
+	flex: 0 0 auto;
+	min-height: var(--default-clickable-area, 34px);
+	padding: calc(var(--default-grid-baseline, 4px) * 1.5) calc(var(--default-grid-baseline, 4px) * 3);
+	border-bottom: 1px solid var(--color-border);
+	color: var(--color-main-text);
+}
+
+.deckcraft-bar__icon {
+	display: inline-flex;
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	color: var(--color-primary-element);
+}
+
+.deckcraft-bar__icon svg {
+	width: 100%;
+	height: 100%;
+}
+
+.deckcraft-bar__title {
+	flex: 0 1 auto;
+	min-width: 0;
+	margin: 0;
+	overflow: hidden;
+	font-size: var(--default-font-size, 15px);
+	font-weight: bold;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.deckcraft-bar__status {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--color-text-maxcontrast);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.deckcraft-bar__status[data-state='error'] {
+	color: var(--color-error-text, var(--color-error));
+	font-weight: bold;
+}
+
+.deckcraft-bar__status[data-state='readonly'] {
+	color: var(--color-warning-text, var(--color-warning));
+}
+
+.deckcraft-bar__toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--default-grid-baseline, 4px);
+	flex: 0 0 auto;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.deckcraft-bar__toggle input {
+	margin: 0;
+	cursor: pointer;
+	accent-color: var(--color-primary-element);
+}
+
+/* Scoped by id so Nextcloud's global button styles don't win. */
+:is(#deckcraft-editor, .deckcraft-save) .deckcraft-button {
+	flex: 0 0 auto;
+	min-height: var(--default-clickable-area, 34px);
+	margin: 0;
+	padding: 0 calc(var(--default-grid-baseline, 4px) * 4);
+	border: 1px solid var(--color-border-dark, var(--color-border));
+	border-radius: var(--border-radius-element, var(--border-radius-large, 10px));
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font: inherit;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+:is(#deckcraft-editor, .deckcraft-save) .deckcraft-button:hover,
+:is(#deckcraft-editor, .deckcraft-save) .deckcraft-button:focus-visible {
+	background: var(--color-background-hover);
+}
+
+:is(#deckcraft-editor, .deckcraft-save) .deckcraft-button--primary {
+	border-color: var(--color-primary-element);
+	background: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+}
+
+:is(#deckcraft-editor, .deckcraft-save) .deckcraft-button--primary:hover,
+:is(#deckcraft-editor, .deckcraft-save) .deckcraft-button--primary:focus-visible {
+	background: var(--color-primary-element-hover);
+}
+
+:is(#deckcraft-editor, .deckcraft-save) .deckcraft-button[hidden] {
+	display: none;
+}
+
+.deckcraft-stage {
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.deckcraft-frame {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+.deckcraft-overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--default-grid-baseline, 4px) * 4);
+	padding: calc(var(--default-grid-baseline, 4px) * 8);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	text-align: center;
+}
+
+.deckcraft-overlay[hidden] {
+	display: none;
+}
+
+.deckcraft-overlay__spinner {
+	width: 44px;
+	height: 44px;
+}
+
+.deckcraft-overlay__text {
+	max-width: 60ch;
+	margin: 0;
+}
+
+.deckcraft-overlay[data-error='true'] .deckcraft-overlay__text {
+	color: var(--color-error-text, var(--color-error));
+}
+
+/* Save As */
+
+.deckcraft-save {
+	position: fixed;
+	inset: 0;
+	width: min(480px, calc(100vw - 32px));
+	height: fit-content;
+	margin: auto;
+	padding: calc(var(--default-grid-baseline, 4px) * 6);
+	border: 0;
+	border-radius: var(--border-radius-container-large, var(--border-radius-large, 16px));
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	box-shadow: 0 0 40px var(--color-box-shadow, rgba(0, 0, 0, 0.3));
+}
+
+.deckcraft-save::backdrop {
+	background: rgba(0, 0, 0, 0.4);
+}
+
+.deckcraft-save form {
+	display: flex;
+	flex-direction: column;
+	gap: calc(var(--default-grid-baseline, 4px) * 3);
+}
+
+.deckcraft-save__heading {
+	margin: 0;
+	font-size: 20px;
+}
+
+.deckcraft-save__hint {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.deckcraft-save__label {
+	display: flex;
+	flex-direction: column;
+	gap: var(--default-grid-baseline, 4px);
+}
+
+.deckcraft-save__input {
+	width: 100%;
+	min-height: var(--default-clickable-area, 34px);
+	margin: 0;
+	padding: 0 calc(var(--default-grid-baseline, 4px) * 3);
+	border: 2px solid var(--color-border-maxcontrast);
+	border-radius: var(--border-radius-element, var(--border-radius-large, 10px));
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font: inherit;
+	box-sizing: border-box;
+}
+
+.deckcraft-save__input:focus {
+	border-color: var(--color-primary-element);
+	outline: none;
+}
+
+.deckcraft-save__folder {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: calc(var(--default-grid-baseline, 4px) * 2);
+}
+
+.deckcraft-save__folder-path {
+	min-width: 0;
+	overflow: hidden;
+	color: var(--color-text-maxcontrast);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.deckcraft-save__error {
+	margin: 0;
+	color: var(--color-error-text, var(--color-error));
+}
+
+.deckcraft-save__error:empty {
+	display: none;
+}
+
+.deckcraft-save__actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: calc(var(--default-grid-baseline, 4px) * 2);
+}
+
+@media (max-width: 720px) {
+	.deckcraft-bar__toggle {
+		display: none;
+	}
+}

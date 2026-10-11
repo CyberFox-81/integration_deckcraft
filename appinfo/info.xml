@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2026 Britton Couchman <brittondcouchman@gmail.com>
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>integration_deckcraft</id>
+	<name>DeckCraft integration</name>
+	<summary>Edit PowerPoint presentations in Nextcloud with DeckCraft</summary>
+	<description><![CDATA[Open a PowerPoint (.pptx, .potx, .ppsx) or DeckCraft presentation in Files with **Edit in DeckCraft** and work on it right in the browser: themes, layouts, shapes, pictures, tables, charts, transitions, animations, speaker notes and the slide show.
+
+- **Save** stores the presentation in DeckCraft's own format next to the original the first time (you pick the name and folder), and to that file from then on. **File › Export › PowerPoint** writes the .pptx back, and Nextcloud keeps the previous state as a file version.
+- **Export** (PDF, PNG, JPEG, outline) stores a file in any folder you pick.
+- Read-only files open normally; saving offers a copy.
+- If someone else changes the file while you have it open, you choose whether to replace their version or save a copy.
+- Optionally, clicking a presentation in Files opens it in DeckCraft.
+
+DeckCraft runs entirely in your browser as WebAssembly. Files go only between your browser and your Nextcloud, and the server needs no extra software.
+
+This is a community integration based on [DeckCraft](https://github.com/storytold/deckcraft) by the ArtCraft team, an open-source, Rust-native presentation app. It embeds a build of DeckCraft and is not made or endorsed by the ArtCraft team.
+
+**Requirements:** a browser with WebGPU or WebGL2, and a web server that serves `.wasm` files as `application/wasm` (Nextcloud's own Apache and nginx configurations do).]]></description>
+	<version>0.1.0</version>
+	<licence>agpl</licence>
+	<author mail="brittondcouchman@gmail.com" homepage="https://github.com/CyberFox-81">Britton Couchman</author>
+	<namespace>DeckCraftIntegration</namespace>
+	<category>office</category>
+	<category>files</category>
+	<category>integration</category>
+	<website>https://github.com/CyberFox-81/integration_deckcraft</website>
+	<bugs>https://github.com/CyberFox-81/integration_deckcraft/issues</bugs>
+	<repository type="git">https://github.com/CyberFox-81/integration_deckcraft.git</repository>
+	<dependencies>
+		<nextcloud min-version="33" max-version="35"/>
+	</dependencies>
+</info>
