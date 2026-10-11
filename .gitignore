@@ -6,3 +6,6 @@ js/
 web/boot.js
 web/deckcraft-web-*
 web/DECKCRAFT-*
+web/snippets/
+web/build-*/
+web/build.txt

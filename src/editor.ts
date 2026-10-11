@@ -325,6 +325,12 @@ async function uploadPicked(save: Unsaved, path: string): Promise<void> {
 		await uploadExisting(save, path)
 		return
 	}
+	if (choice === undefined && writable.has(path)) {
+		// DeckCraft saves again to a file it saved before (not a new pick): that file is where the
+		// presentation lives now.
+		await uploadExisting(save, path, isDocument(path))
+		return
+	}
 	if (choice?.replace) {
 		await finishUpload(save, path, await put(path, save.bytes, {}))
 		return
@@ -332,11 +338,11 @@ async function uploadPicked(save: Unsaved, path: string): Promise<void> {
 	await uploadNew(save, path)
 }
 
-async function uploadExisting(save: Unsaved, path: string): Promise<void> {
+async function uploadExisting(save: Unsaved, path: string, newHome = false): Promise<void> {
 	const etag = etags.get(path)
 	const response = await put(path, save.bytes, etag ? { 'If-Match': etag } : {})
 	if (response.status !== 412) {
-		await finishUpload(save, path, response)
+		await finishUpload(save, path, response, newHome)
 		return
 	}
 	// Someone else saved the file since this page read it.
@@ -351,7 +357,7 @@ async function uploadExisting(save: Unsaved, path: string): Promise<void> {
 		'cancel',
 	)
 	if (choice === 'replace') {
-		await finishUpload(save, path, await put(path, save.bytes, {}))
+		await finishUpload(save, path, await put(path, save.bytes, {}), newHome)
 	} else if (choice === 'copy') {
 		const copy = await askSavePathWithStatus(basename(path), dirname(path), 'copy', false)
 		if (copy === null) {
@@ -404,7 +410,7 @@ async function finishUpload(save: Unsaved, path: string, response: Response, new
 		saveTargets.set(save.name, path)
 	}
 	const moved = [...saveTargets].filter(([name, target]) => target === documentPath && extname(name).toLowerCase() === extname(path).toLowerCase())
-	if (path !== documentPath && isDocument(path) && (plainSave ? newHome : moved.length > 0)) {
+	if (path !== documentPath && isDocument(path) && (newHome || (!plainSave && moved.length > 0))) {
 		for (const [name] of moved) {
 			saveTargets.set(name, path)
 		}

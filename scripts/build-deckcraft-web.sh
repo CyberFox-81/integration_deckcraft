@@ -40,7 +40,7 @@ else
 	git -C "$SRC" apply "$PATCH"
 fi
 
-cargo_args=(build --release -p deckcraft-web --target wasm32-unknown-unknown)
+cargo_args=(build --profile release -p deckcraft-web --target wasm32-unknown-unknown)
 if [ "${BUILD_STD:-0}" = "1" ]; then
 	export RUSTC_BOOTSTRAP=1
 	cargo_args+=(-Zbuild-std=std,panic_abort)
@@ -53,33 +53,37 @@ fi
 WASM_IN="$TARGET_DIR/wasm32-unknown-unknown/release/deckcraft-web.wasm"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
-wasm-bindgen --target web --weak-refs --no-typescript --out-dir "$STAGE" --out-name deckcraft-web "$WASM_IN"
+OUT_NAME=deckcraft-web
+wasm-bindgen --target web --weak-refs --no-typescript --out-dir "$STAGE" --out-name "$OUT_NAME" "$WASM_IN"
 
 if command -v wasm-opt >/dev/null; then
 	wasm-opt -Oz --enable-bulk-memory --enable-nontrapping-float-to-int --enable-sign-ext \
 		--enable-mutable-globals --enable-reference-types --enable-multivalue \
-		"$STAGE/deckcraft-web_bg.wasm" -o "$STAGE/deckcraft-web_bg.opt.wasm"
-	mv "$STAGE/deckcraft-web_bg.opt.wasm" "$STAGE/deckcraft-web_bg.wasm"
+		"$STAGE/${OUT_NAME}_bg.wasm" -o "$STAGE/${OUT_NAME}_bg.opt.wasm"
+	mv "$STAGE/${OUT_NAME}_bg.opt.wasm" "$STAGE/${OUT_NAME}_bg.wasm"
 else
 	echo "note: wasm-opt not found; the wasm is not size-optimized"
 fi
 
-# Content-hashed names: Nextcloud lets browsers cache app assets for months.
-hash() { sha256sum "$1" | cut -c1-16; }
-JS_NAME="deckcraft-web-$(hash "$STAGE/deckcraft-web.js").js"
-WASM_NAME="deckcraft-web-$(hash "$STAGE/deckcraft-web_bg.wasm").wasm"
-
 mkdir -p "$OUT"
+hash() { sha256sum "$1" | cut -c1-16; }
+# Content-hashed names: Nextcloud lets browsers cache app assets for months.
+DEST="$OUT"
+JS_NAME="deckcraft-web-$(hash "$STAGE/$OUT_NAME.js").js"
+WASM_NAME="deckcraft-web-$(hash "$STAGE/${OUT_NAME}_bg.wasm").wasm"
 rm -f "$OUT"/deckcraft-web-*.js "$OUT"/deckcraft-web-*.wasm
-cp "$STAGE/deckcraft-web.js" "$OUT/$JS_NAME"
-cp "$STAGE/deckcraft-web_bg.wasm" "$OUT/$WASM_NAME"
+cp "$STAGE/$OUT_NAME.js" "$DEST/$JS_NAME"
+cp "$STAGE/${OUT_NAME}_bg.wasm" "$DEST/$WASM_NAME"
+# JavaScript the Rust code brings along (`#[wasm_bindgen(module = …)]`), imported by the glue.
+rm -rf "$DEST/snippets"
+if [ -d "$STAGE/snippets" ]; then cp -R "$STAGE/snippets" "$DEST/snippets"; fi
 
 # DeckCraft's licenses and the attributions for the fonts and assets compiled into it.
 for f in LICENSE-MIT LICENSE-APACHE NOTICE ATTRIBUTION.md ASSETS.md; do
 	if [ -f "$SRC/$f" ]; then cp "$SRC/$f" "$OUT/DECKCRAFT-$f"; fi
 done
 
-cat > "$OUT/boot.js" <<BOOT
+cat > "$DEST/boot.js" <<BOOT
 /*
  * SPDX-FileCopyrightText: 2026 Britton Couchman <brittondcouchman@gmail.com>
  * SPDX-License-Identifier: AGPL-3.0-or-later
