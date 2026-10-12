@@ -23,7 +23,7 @@
 set -euo pipefail
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DECKCRAFT_REF="${DECKCRAFT_REF:-a98df49b21632d69a3da994d35df1ea91dab41af}"
+DECKCRAFT_REF="${DECKCRAFT_REF:-be14248577b92059eb2b8c0c9460cceffbc1f01d}"
 SRC="${1:-$APP_DIR/build/deckcraft}"
 PATCH="$APP_DIR/patches/deckcraft-nextcloud.patch"
 OUT="$APP_DIR/web"
@@ -35,9 +35,12 @@ if [ ! -e "$SRC/.git" ]; then
 fi
 
 if grep -rq 'deckcraft:ready' "$SRC/apps/deckcraft-web/src"; then
-	echo "bridge patch already applied"
-else
+	echo "DeckCraft has the embedding bridge"
+elif [ -s "$PATCH" ]; then
 	git -C "$SRC" apply "$PATCH"
+else
+	echo "error: this DeckCraft has no embedding bridge, and there is no patch to add it" >&2
+	exit 1
 fi
 
 cargo_args=(build --profile release -p deckcraft-web --target wasm32-unknown-unknown)

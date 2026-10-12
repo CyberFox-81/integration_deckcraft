@@ -4,6 +4,10 @@
 -->
 # Changelog
 
+## 0.1.1 – 2026-10-11
+
+- DeckCraft 0.5.0 (commit be14248): the latest DeckCraft, with the embedding bridge rebased onto it
+
 ## 0.1.0 – 2026-10-10
 
 First release.
