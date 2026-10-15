@@ -10,10 +10,10 @@ index 7014421..e462fb8 100644
 +web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "MessageEvent", "UrlSearchParams"] }
 diff --git a/apps/deckcraft-web/src/host.rs b/apps/deckcraft-web/src/host.rs
 new file mode 100644
-index 0000000..3d111c7
+index 0000000..c4a7103
 --- /dev/null
 +++ b/apps/deckcraft-web/src/host.rs
-@@ -0,0 +1,167 @@
+@@ -0,0 +1,184 @@
 +//! The `postMessage` bridge to a same-origin parent page (`?host=parent`), for pages that embed
 +//! DeckCraft in an `<iframe>` (such as a Nextcloud app). Messages are plain objects with a `type`:
 +//!
@@ -33,7 +33,7 @@ index 0000000..3d111c7
 +use std::cell::{Cell, RefCell};
 +use std::rc::Rc;
 +
-+use deckcraft_ui_egui::{Inbox, Services, SlideApp};
++use deckcraft_ui_egui::{Services, SlideApp};
 +use wasm_bindgen::JsCast as _;
 +use wasm_bindgen::JsValue;
 +use wasm_bindgen::closure::Closure;
@@ -54,6 +54,10 @@ index 0000000..3d111c7
 +    saved: Rc<RefCell<Vec<String>>>,
 +    /// The unsaved-changes state last reported to the parent.
 +    reported: Rc<Cell<Option<bool>>>,
++    /// Files the parent sent, waiting for the next frame: (name, bytes).
++    opened: Rc<RefCell<Vec<(String, Vec<u8>)>>>,
++    /// The app's context, for a frame after a file opens.
++    ctx: Rc<RefCell<Option<egui::Context>>>,
 +}
 +
 +impl Bridge {
@@ -65,13 +69,13 @@ index 0000000..3d111c7
 +            return None;
 +        }
 +        let origin = window.location().origin().ok()?;
-+        Some(Self { window, parent, origin, saved: Rc::default(), reported: Rc::default() })
++        Some(Self { window, parent, origin, saved: Rc::default(), reported: Rc::default(), opened: Rc::default(), ctx: Rc::default() })
 +    }
 +
 +    /// Send saved and exported files to the parent instead of downloading them, and hear files
 +    /// from it.
-+    pub fn connect(&self, services: &mut Services, inbox: Inbox, ctx: egui::Context) {
-+        self.listen(inbox, ctx);
++    pub fn connect(&self, services: &mut Services, ctx: egui::Context) {
++        self.listen(ctx);
 +        let bridge = self.clone();
 +        services.download = Some(Box::new(move |name: &str, bytes: &[u8]| {
 +            if let Err(e) = bridge.post_save(name, bytes) {
@@ -98,9 +102,20 @@ index 0000000..3d111c7
 +        self.send(&[("type", "deckcraft:failed".into()), ("error", error.into())]);
 +    }
 +
-+    /// After each frame: a presentation handed to the parent this frame counts as saved, and the
-+    /// parent hears when unsaved changes appear or go away.
++    /// After each frame: files the parent sent open (or are inserted) like dropped files, a
++    /// presentation handed to the parent this frame counts as saved, and the parent hears when
++    /// unsaved changes appear or go away.
 +    pub fn sync(&self, app: &mut SlideApp) {
++        let opened = std::mem::take(&mut *self.opened.borrow_mut());
++        if !opened.is_empty() {
++            for (name, bytes) in opened {
++                app.open_or_insert_bytes(&name, &bytes);
++            }
++            // Show it: this runs after the frame was drawn.
++            if let Some(ctx) = &*self.ctx.borrow() {
++                ctx.request_repaint();
++            }
++        }
 +        let saved = std::mem::take(&mut *self.saved.borrow_mut());
 +        if saved.iter().any(|name| is_presentation(name))
 +            && let Some(doc) = app.session.active_mut()
@@ -126,9 +141,11 @@ index 0000000..3d111c7
 +        Ok(())
 +    }
 +
-+    fn listen(&self, inbox: Inbox, ctx: egui::Context) {
++    fn listen(&self, ctx: egui::Context) {
++        *self.ctx.borrow_mut() = Some(ctx.clone());
 +        let parent = self.parent.clone();
 +        let origin = self.origin.clone();
++        let opened = self.opened.clone();
 +        let on_message = Closure::<dyn FnMut(web_sys::MessageEvent)>::new(move |event: web_sys::MessageEvent| {
 +            if event.origin() != origin || !event.source().is_some_and(|s| js_sys::Object::is(&s, &parent)) {
 +                return;
@@ -139,7 +156,7 @@ index 0000000..3d111c7
 +            }
 +            let name = string(&data, "name").filter(|n| !n.trim().is_empty()).unwrap_or_else(|| "Presentation.pptx".to_string());
 +            let Some(bytes) = bytes(&data) else { return };
-+            inbox.lock().unwrap_or_else(|e| e.into_inner()).push((name, bytes));
++            opened.borrow_mut().push((name, bytes));
 +            ctx.request_repaint();
 +        });
 +        if self.window.add_event_listener_with_callback("message", on_message.as_ref().unchecked_ref()).is_ok() {
@@ -182,10 +199,10 @@ index 0000000..3d111c7
 +    }
 +}
 diff --git a/apps/deckcraft-web/src/main.rs b/apps/deckcraft-web/src/main.rs
-index 366ea34..cec0e3d 100644
+index 6d2b7e9..e1c2c9a 100644
 --- a/apps/deckcraft-web/src/main.rs
 +++ b/apps/deckcraft-web/src/main.rs
-@@ -13,10 +13,14 @@
+@@ -14,10 +14,14 @@
  //! - preferences are not persisted.
  //!
  //! URL query flags: `?webgl` forces the WebGL2 backend instead of WebGPU; `?blank` starts with an
@@ -202,7 +219,7 @@ index 366ea34..cec0e3d 100644
  mod web;
  
 diff --git a/apps/deckcraft-web/src/web.rs b/apps/deckcraft-web/src/web.rs
-index f0199a5..39b890a 100644
+index dabad8a..d02f1cf 100644
 --- a/apps/deckcraft-web/src/web.rs
 +++ b/apps/deckcraft-web/src/web.rs
 @@ -28,6 +28,10 @@ pub fn start() {
@@ -223,7 +240,7 @@ index f0199a5..39b890a 100644
 -                    let mut app = SlideApp::new(Session::new(), services(inbox.clone(), cc.egui_ctx.clone()));
 +                    let mut services = services(inbox.clone(), cc.egui_ctx.clone());
 +                    if let Some(bridge) = &app_bridge {
-+                        bridge.connect(&mut services, inbox.clone(), cc.egui_ctx.clone());
++                        bridge.connect(&mut services, cc.egui_ctx.clone());
 +                    }
 +                    let mut app = SlideApp::new(Session::new(), services);
                      let q = query();
@@ -270,7 +287,7 @@ index f0199a5..39b890a 100644
  }
  
  impl eframe::App for WebShell {
-@@ -99,6 +121,9 @@ impl eframe::App for WebShell {
+@@ -106,6 +128,9 @@ impl eframe::App for WebShell {
  
      fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
          self.app.ui(ui);
@@ -279,3 +296,18 @@ index f0199a5..39b890a 100644
 +        }
      }
  }
+ 
+diff --git a/crates/engine/src/recovery.rs b/crates/engine/src/recovery.rs
+index 707d0aa..e8d4aa6 100644
+--- a/crates/engine/src/recovery.rs
++++ b/crates/engine/src/recovery.rs
+@@ -44,6 +44,9 @@ pub fn instance_id() -> u64 {
+     *ID.get_or_init(|| {
+         use std::hash::{BuildHasher, Hasher};
+         let mut h = std::collections::hash_map::RandomState::new().build_hasher();
++        // `std::process::id` panics on wasm32-unknown-unknown ("no pids on this platform"), which
++        // made every new or opened presentation in the web build fail. A page is one instance.
++        #[cfg(not(target_arch = "wasm32"))]
+         h.write_u32(std::process::id());
+         #[cfg(not(target_arch = "wasm32"))]
+         if let Ok(d) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {

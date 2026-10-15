@@ -4,6 +4,11 @@
 -->
 # Changelog
 
+## 0.1.3 – 2026-10-14
+
+- DeckCraft 0.7.0 (commit 8d3e4a6): the latest DeckCraft, with the embedding bridge rebased onto it
+- A fix for DeckCraft's browser version, which since this week couldn't open or create any presentation (it asked the browser for a process id, which panics there)
+
 ## 0.1.2 – 2026-10-12
 
 - DeckCraft 0.6.1 (commit 688c7ef): the latest DeckCraft, with the embedding bridge rebased onto it
