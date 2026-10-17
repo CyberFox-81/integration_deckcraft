@@ -23,7 +23,7 @@
 set -euo pipefail
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DECKCRAFT_REF="${DECKCRAFT_REF:-8d3e4a630f3657732fddcb9a4f20001e37c5b847}"
+DECKCRAFT_REF="${DECKCRAFT_REF:-1dc69720db64323370dda061226becb09ad79fd4}"
 SRC="${1:-$APP_DIR/build/deckcraft}"
 PATCH="$APP_DIR/patches/deckcraft-nextcloud.patch"
 OUT="$APP_DIR/web"
