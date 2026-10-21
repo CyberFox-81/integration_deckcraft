@@ -298,7 +298,7 @@ index dabad8a..d02f1cf 100644
  }
  
 diff --git a/crates/engine/src/recovery.rs b/crates/engine/src/recovery.rs
-index 707d0aa..e8d4aa6 100644
+index 6996cda..0b5d30b 100644
 --- a/crates/engine/src/recovery.rs
 +++ b/crates/engine/src/recovery.rs
 @@ -44,6 +44,9 @@ pub fn instance_id() -> u64 {

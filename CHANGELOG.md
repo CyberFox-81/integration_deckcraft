@@ -4,6 +4,11 @@
 -->
 # Changelog
 
+## 0.1.5 – 2026-10-21
+
+- DeckCraft 0.9.0 (commit 354087e): the latest DeckCraft, with the embedding bridge rebased onto it
+- Still carries the fix for DeckCraft's browser version not opening or creating presentations (not in DeckCraft itself yet)
+
 ## 0.1.4 – 2026-10-16
 
 - DeckCraft 0.7.0 (commit 1dc6972): the latest DeckCraft, with the embedding bridge rebased onto it
