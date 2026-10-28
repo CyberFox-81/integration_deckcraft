@@ -4,6 +4,11 @@
 -->
 # Changelog
 
+## 0.1.6 – 2026-10-27
+
+- DeckCraft 0.11.1 (commit 88c2cef): the latest DeckCraft, with the embedding bridge rebased onto it
+- DeckCraft now fixes the browser problem that kept presentations from opening (asking for a process id) itself, so this build no longer carries its own fix for it
+
 ## 0.1.5 – 2026-10-21
 
 - DeckCraft 0.9.0 (commit 354087e): the latest DeckCraft, with the embedding bridge rebased onto it

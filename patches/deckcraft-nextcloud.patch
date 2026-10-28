@@ -1,5 +1,5 @@
 diff --git a/apps/deckcraft-web/Cargo.toml b/apps/deckcraft-web/Cargo.toml
-index 7014421..e462fb8 100644
+index 7014421d..e462fb8c 100644
 --- a/apps/deckcraft-web/Cargo.toml
 +++ b/apps/deckcraft-web/Cargo.toml
 @@ -27,4 +27,4 @@ rfd = { workspace = true }
@@ -10,7 +10,7 @@ index 7014421..e462fb8 100644
 +web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlCanvasElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "Location", "CssStyleDeclaration", "MessageEvent", "UrlSearchParams"] }
 diff --git a/apps/deckcraft-web/src/host.rs b/apps/deckcraft-web/src/host.rs
 new file mode 100644
-index 0000000..c4a7103
+index 00000000..c4a7103a
 --- /dev/null
 +++ b/apps/deckcraft-web/src/host.rs
 @@ -0,0 +1,184 @@
@@ -199,7 +199,7 @@ index 0000000..c4a7103
 +    }
 +}
 diff --git a/apps/deckcraft-web/src/main.rs b/apps/deckcraft-web/src/main.rs
-index 6d2b7e9..e1c2c9a 100644
+index 6d2b7e94..e1c2c9ac 100644
 --- a/apps/deckcraft-web/src/main.rs
 +++ b/apps/deckcraft-web/src/main.rs
 @@ -14,10 +14,14 @@
@@ -219,10 +219,10 @@ index 6d2b7e9..e1c2c9a 100644
  mod web;
  
 diff --git a/apps/deckcraft-web/src/web.rs b/apps/deckcraft-web/src/web.rs
-index dabad8a..d02f1cf 100644
+index f8e68a35..fc3de407 100644
 --- a/apps/deckcraft-web/src/web.rs
 +++ b/apps/deckcraft-web/src/web.rs
-@@ -28,6 +28,10 @@ pub fn start() {
+@@ -30,6 +30,10 @@ pub fn start() {
          {
              create.instance_descriptor.backends = eframe::wgpu::Backends::GL;
          }
@@ -233,9 +233,9 @@ index dabad8a..d02f1cf 100644
          let result = eframe::WebRunner::new()
              .start(
                  canvas,
-@@ -37,9 +41,19 @@ pub fn start() {
-                         log::info!("deckcraft-web {}: wgpu backend {:?}", env!("CARGO_PKG_VERSION"), rs.adapter.get_info().backend);
+@@ -40,9 +44,19 @@ pub fn start() {
                      }
+                     deckcraft_ui_egui::install_ime_pass_hooks(&cc.egui_ctx);
                      let inbox: Inbox = Inbox::default();
 -                    let mut app = SlideApp::new(Session::new(), services(inbox.clone(), cc.egui_ctx.clone()));
 +                    let mut services = services(inbox.clone(), cc.egui_ctx.clone());
@@ -255,7 +255,7 @@ index dabad8a..d02f1cf 100644
                          if let Err(e) = deckcraft_engine::sample::open_sample(&mut app.session) {
                              log::error!("sample deck: {e}");
                          }
-@@ -49,10 +63,13 @@ pub fn start() {
+@@ -52,10 +66,13 @@ pub fn start() {
                      if q.contains("show") {
                          app.start_show(0, false);
                      }
@@ -270,7 +270,7 @@ index dabad8a..d02f1cf 100644
          if let Some(el) = document.get_element_by_id(LOADING_ID) {
              match result {
                  Ok(()) => el.remove(),
-@@ -66,11 +83,16 @@ fn query() -> String {
+@@ -69,11 +86,16 @@ fn query() -> String {
      web_sys::window().and_then(|w| w.location().search().ok()).unwrap_or_default()
  }
  
@@ -287,7 +287,7 @@ index dabad8a..d02f1cf 100644
  }
  
  impl eframe::App for WebShell {
-@@ -106,6 +128,9 @@ impl eframe::App for WebShell {
+@@ -111,6 +133,9 @@ impl eframe::App for WebShell {
  
      fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
          self.app.ui(ui);
@@ -296,18 +296,3 @@ index dabad8a..d02f1cf 100644
 +        }
      }
  }
- 
-diff --git a/crates/engine/src/recovery.rs b/crates/engine/src/recovery.rs
-index 6996cda..0b5d30b 100644
---- a/crates/engine/src/recovery.rs
-+++ b/crates/engine/src/recovery.rs
-@@ -44,6 +44,9 @@ pub fn instance_id() -> u64 {
-     *ID.get_or_init(|| {
-         use std::hash::{BuildHasher, Hasher};
-         let mut h = std::collections::hash_map::RandomState::new().build_hasher();
-+        // `std::process::id` panics on wasm32-unknown-unknown ("no pids on this platform"), which
-+        // made every new or opened presentation in the web build fail. A page is one instance.
-+        #[cfg(not(target_arch = "wasm32"))]
-         h.write_u32(std::process::id());
-         #[cfg(not(target_arch = "wasm32"))]
-         if let Ok(d) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
