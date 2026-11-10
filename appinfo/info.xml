@@ -10,7 +10,8 @@
 	<summary>Edit PowerPoint presentations in Nextcloud with DeckCraft</summary>
 	<description><![CDATA[Open a PowerPoint (.pptx, .potx, .ppsx) or DeckCraft presentation in Files with **Edit in DeckCraft** and work on it right in the browser: themes, layouts, shapes, pictures, tables, charts, transitions, animations, speaker notes and the slide show.
 
-- **Save** stores the presentation in DeckCraft's own format next to the original the first time (you pick the name and folder), and to that file from then on. **File › Export › PowerPoint** writes the .pptx back, and Nextcloud keeps the previous state as a file version.
+- **Save** writes the presentation back in its own format (a .pptx stays a .pptx), and Nextcloud keeps the previous state as a file version.
+- **Save As** stores it under a name and in a folder you pick, as PowerPoint or in DeckCraft's own format; later saves go to that file.
 - **Export** (PDF, PNG, JPEG, outline) stores a file in any folder you pick.
 - Read-only files open normally; saving offers a copy.
 - If someone else changes the file while you have it open, you choose whether to replace their version or save a copy.
@@ -21,7 +22,7 @@ DeckCraft runs entirely in your browser as WebAssembly. Files go only between yo
 This is a community integration based on [DeckCraft](https://github.com/storytold/deckcraft) by the ArtCraft team, an open-source, Rust-native presentation app. It embeds a build of DeckCraft and is not made or endorsed by the ArtCraft team.
 
 **Requirements:** a browser with WebGPU or WebGL2, and a web server that serves `.wasm` files as `application/wasm` (Nextcloud's own Apache and nginx configurations do).]]></description>
-	<version>0.1.6</version>
+	<version>0.1.7</version>
 	<licence>agpl</licence>
 	<author mail="brittondcouchman@gmail.com" homepage="https://github.com/CyberFox-81">Britton Couchman</author>
 	<namespace>DeckCraftIntegration</namespace>

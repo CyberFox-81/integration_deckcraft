@@ -21,10 +21,10 @@ Started with `?host=parent` inside an iframe, DeckCraft talks to its parent wind
 |---|---|---|---|
 | `deckcraft:ready` | DeckCraft → parent | `version` | The app is listening; send a file now. |
 | `deckcraft:open` | parent → DeckCraft | `name`, `bytes` (`ArrayBuffer` or `Uint8Array`) | Open this file, as File › Open would. |
-| `deckcraft:save` | DeckCraft → parent | `name`, `bytes` (transferred `ArrayBuffer`) | A file DeckCraft would otherwise download: Save, Save As or Export. `name` is a file name, or a path the parent picked. The parent stores the file and reports success or failure itself. |
+| `deckcraft:save` | DeckCraft → parent | `name`, `bytes` (transferred `ArrayBuffer`), `saveAs` (boolean, optional) | A file DeckCraft would otherwise download: Save, Save As or Export. `name` is a file name, or a path the parent picked. With `saveAs: true` the parent asks where to keep it, even under a name it saved before, and that file becomes the presentation's file. The parent stores the file and reports success or failure itself. |
 | `deckcraft:dirty` | DeckCraft → parent | `dirty` (boolean) | Unsaved changes appeared or went away. |
 | `deckcraft:failed` | DeckCraft → parent | `error` | The app couldn't start (for example, no WebGPU or WebGL2). |
 
-With `?host=parent`, DeckCraft starts without the sample deck, an optional `&author=<name>` signs the user's comments, and the parent guards leaving the page with unsaved changes. A presentation handed to the parent (DeckCraft, PowerPoint) counts as saved.
+With `?host=parent`, DeckCraft starts with an empty presentation instead of the sample deck, an optional `&author=<name>` signs the user's comments, and the parent guards leaving the page with unsaved changes. Save sends the opened presentation back under its own name and format; Save As (`saveAs: true`) and a first Save of a presentation the parent never sent ask the parent where to keep it.
 
 Without `?host=parent`, DeckCraft behaves exactly as upstream: saved files download.

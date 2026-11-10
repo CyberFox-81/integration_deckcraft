@@ -4,6 +4,12 @@
 -->
 # Changelog
 
+## 0.1.7 – 2026-11-09
+
+- DeckCraft 0.15.0 (commit 0623b43), which includes the embedding bridge this app uses (storytold/deckcraft#1809): the official DeckCraft build is used as is, without a patch
+- Save writes a PowerPoint presentation back as .pptx, under its own name, instead of a new .deckcraft file next to it
+- Save As (Ctrl/⌘+Shift+S) asks for a name and folder in Nextcloud, as PowerPoint or in DeckCraft's own format; later saves go to that file
+
 ## 0.1.6 – 2026-10-27
 
 - DeckCraft 0.11.1 (commit 88c2cef): the latest DeckCraft, with the embedding bridge rebased onto it

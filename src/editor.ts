@@ -13,8 +13,10 @@
  *   page → DeckCraft   deckcraft:file       { path, blob | error } one of them
  *   DeckCraft → page   deckcraft:pick-save  { id, name } Save As or Export asks where to save (optional)
  *   page → DeckCraft   deckcraft:picked     { id, path } the answer (no path: cancelled)
- *   DeckCraft → page   deckcraft:save       { name, bytes, quiet? } Save (name) or Save As/Export (path);
- *                                       quiet: a file saved along with the presentation (its media)
+ *   DeckCraft → page   deckcraft:save       { name, bytes, saveAs?, quiet? } Save (name) or Save As/Export
+ *                                       (path); saveAs: Save As under a bare name, asked about here
+ *                                       even when the name was saved before; quiet: a file saved
+ *                                       along with the presentation (its media)
  *   DeckCraft → page   deckcraft:dirty      { dirty } unsaved changes appeared or went away
  *   DeckCraft → page   deckcraft:failed     { error } the app couldn't start
  *
@@ -52,6 +54,8 @@ interface Unsaved {
 	bytes: ArrayBuffer
 	/** Saved along with the presentation (such as its media): no notice of its own. */
 	quiet?: boolean
+	/** Save As by a bare name: the user picks where, and the presentation moves there. */
+	saveAs?: boolean
 }
 
 class HttpError extends Error {
@@ -172,7 +176,7 @@ window.addEventListener('message', (event: MessageEvent) => {
 		break
 	case 'deckcraft:save':
 		if (message.bytes instanceof ArrayBuffer) {
-			queueSave({ name: String(message.name ?? file.name), bytes: message.bytes, quiet: message.quiet === true })
+			queueSave({ name: String(message.name ?? file.name), bytes: message.bytes, quiet: message.quiet === true, saveAs: message.saveAs === true })
 		}
 		break
 	case 'deckcraft:need':
@@ -293,7 +297,8 @@ function queueSave(save: Unsaved): void {
  * Upload one save. A path is a Save As or Export location picked here; a bare name is a plain
  * Save or an export, which goes to the file of that name it went to before (at first, only the
  * opened file), or asks where: a read-only original, a format the opened file isn't in, or an
- * export.
+ * export. Save As by a bare name (`saveAs`, from bridges that don't ask this page where to save
+ * first) always asks, even under a name saved before, so it never goes back over a file unasked.
  */
 async function store(save: Unsaved): Promise<void> {
 	unsaved.delete(save.name)
@@ -301,12 +306,12 @@ async function store(save: Unsaved): Promise<void> {
 		await uploadPicked(save, save.name)
 		return
 	}
-	const target = saveTargets.get(save.name)
+	const target = save.saveAs ? undefined : saveTargets.get(save.name)
 	if (target !== undefined && writable.has(target)) {
 		await uploadExisting(save, target)
 		return
 	}
-	const reason: SaveReason = target !== undefined ? 'readOnly' : isDocument(save.name) ? 'newFormat' : 'export'
+	const reason: SaveReason = save.saveAs ? 'saveAs' : target !== undefined ? 'readOnly' : isDocument(save.name) ? 'newFormat' : 'export'
 	const path = await askSavePathWithStatus(save.name, dirname(documentPath), reason, false)
 	if (path === null) {
 		if (reason === 'export') {

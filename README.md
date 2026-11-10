@@ -7,7 +7,8 @@
 Open and edit the files in your Nextcloud with [DeckCraft](https://github.com/storytold/deckcraft), the open-source, Rust-native presentation app, without leaving the browser.
 
 - **Edit in DeckCraft** appears in the Files action menu of every PowerPoint (.pptx, .potx, .ppsx) and DeckCraft (.deckcraft) presentation you can read.
-- **Save** (Ctrl/⌘+S) stores the presentation in DeckCraft's own format: the first time, you pick the name and folder (it's offered next to the original), and later saves go to that file. **File › Export › PowerPoint** writes the .pptx back under its own name. Nextcloud keeps the previous state of a file as a version.
+- **Save** (Ctrl/⌘+S) writes the presentation back to Nextcloud in its own format (a .pptx stays a .pptx), and Nextcloud keeps the previous state as a file version.
+- **Save As** (Ctrl/⌘+Shift+S) asks for a name and folder in your Nextcloud, as PowerPoint or in DeckCraft's own format (.deckcraft); later saves go to that file.
 - **Export** (PDF, PNG, JPEG, outline) asks for a name and folder in your Nextcloud the first time.
 - If someone else changes the file while you have it open, saving asks whether to replace their version or save a copy.
 - Read-only files (for example a share without edit rights) open normally; saving offers a copy.
@@ -48,13 +49,13 @@ Files ── "Edit in DeckCraft" ──▶ /apps/integration_deckcraft/edit/{fil
 
 The editor page downloads the file over WebDAV and passes it to DeckCraft with `postMessage`. When you save, DeckCraft passes the bytes back and the page uploads them with `If-Match`, so a newer version on the server is never overwritten without asking. A save in a format the opened file isn't in, and an export, ask for a name and folder with Nextcloud's own folder picker the first time; later saves under the same name go to the same file. The frame page is the only one whose Content Security Policy allows compiling WebAssembly.
 
-DeckCraft's browser build saves by downloading a file. `patches/deckcraft-nextcloud.patch` adds an opt-in embedding bridge (`?host=parent`) to its web shell; the protocol is in [web/README.md](web/README.md). It is meant to be proposed upstream, so a future official DeckCraft build can be used as is.
+DeckCraft has the opt-in embedding bridge (`?host=parent`) this app uses since [storytold/deckcraft#1809](https://github.com/storytold/deckcraft/pull/1809), so the official DeckCraft build is used as is; the protocol is in [web/README.md](web/README.md).
 
 ## Build from source
 
 ```sh
 make js      # npm ci && vite build → js/
-make wasm    # clone DeckCraft, apply the patch, build → web/   (needs Rust, see below)
+make wasm    # clone DeckCraft, build → web/   (needs Rust, see below)
 make dist    # → build/dist/integration_deckcraft-<version>.tar.gz
 ```
 
@@ -97,7 +98,6 @@ Every new version also goes to [nextcloud_plugins](https://github.com/CyberFox-8
 
 - DeckCraft is young; see its [roadmap](https://github.com/storytold/deckcraft/blob/main/ROADMAP.md) for what's still missing.
 - One person edits at a time. There is no live co-editing; concurrent saves are caught and you choose what happens.
-- In the browser DeckCraft saves in its own format (.deckcraft); PowerPoint files are written with **File › Export › PowerPoint**.
 
 ## License
 
